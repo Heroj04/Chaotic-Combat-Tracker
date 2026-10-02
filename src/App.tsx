@@ -1,25 +1,32 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import { RotateCcw, Settings2 } from 'lucide-react'
 import './App.css'
 import { OptionsDialog } from './OptionsDialog'
 import { PlayerPanel } from './PlayerPanel'
 import {
-  adjustStat,
   createDefaultDisplaySettings,
-  createInitialMatch,
+  createInitialTrackerState,
   DISPLAY_LAYOUTS,
   PANEL_ORIENTATIONS,
-  toggleElement,
   TRIBE_THEMES,
+  trackerReducer,
   type DisplayLayout,
   type DisplaySettings,
-  type MatchState,
   type PanelOrientation,
   type PlayerDisplaySettings,
-  type PlayerState,
+  type StatName,
 } from './model'
+import { useScreenWakeLock } from './useScreenWakeLock'
 
 const SETTINGS_STORAGE_KEY = 'chaotic-combat-tracker-display-settings'
+
+function auditMetadata() {
+  const timestamp = Date.now()
+  return {
+    id: `${timestamp}-${Math.random().toString(36).slice(2)}`,
+    timestamp,
+  }
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -65,6 +72,10 @@ function readDisplaySettings(): DisplaySettings {
       players: [firstPlayer, secondPlayer],
       layout: parsed.layout as DisplayLayout,
       orientation: parsed.orientation as PanelOrientation,
+      keepScreenAwake:
+        typeof parsed.keepScreenAwake === 'boolean'
+          ? parsed.keepScreenAwake
+          : fallback.keepScreenAwake,
     }
   } catch {
     return fallback
@@ -72,11 +83,17 @@ function readDisplaySettings(): DisplaySettings {
 }
 
 function App() {
-  const [players, setPlayers] = useState<MatchState>(createInitialMatch)
+  const [trackerState, dispatch] = useReducer(
+    trackerReducer,
+    undefined,
+    createInitialTrackerState,
+  )
+  const { players, auditLog } = trackerState
   const [displaySettings, setDisplaySettings] =
     useState<DisplaySettings>(readDisplaySettings)
   const [optionsOpen, setOptionsOpen] = useState(false)
   const resetDialogRef = useRef<HTMLDialogElement>(null)
+  const screenWakeLock = useScreenWakeLock(displaySettings.keepScreenAwake)
 
   useEffect(() => {
     try {
@@ -88,14 +105,6 @@ function App() {
       return
     }
   }, [displaySettings])
-
-  function updatePlayer(playerIndex: 0 | 1, update: (player: PlayerState) => PlayerState) {
-    setPlayers((currentPlayers) => {
-      const nextPlayers: MatchState = [...currentPlayers]
-      nextPlayers[playerIndex] = update(currentPlayers[playerIndex])
-      return nextPlayers
-    })
-  }
 
   function updatePlayerSettings(
     playerIndex: 0 | 1,
@@ -129,15 +138,24 @@ function App() {
             playerName={playerName}
             playerNumber={playerNumber}
             theme={options.theme}
-            onStatChange={(stat, direction) =>
-              updatePlayer(playerIndex, (currentPlayer) =>
-                adjustStat(currentPlayer, stat, direction),
-              )
+            onStatChange={(stat: StatName, direction) =>
+              dispatch({
+                ...auditMetadata(),
+                type: 'stat-adjusted',
+                playerIndex,
+                playerName,
+                stat,
+                direction,
+              })
             }
             onElementToggle={(element) =>
-              updatePlayer(playerIndex, (currentPlayer) =>
-                toggleElement(currentPlayer, element),
-              )
+              dispatch({
+                ...auditMetadata(),
+                type: 'element-toggled',
+                playerIndex,
+                playerName,
+                element,
+              })
             }
           />
         )
@@ -170,6 +188,9 @@ function App() {
       <OptionsDialog
         open={optionsOpen}
         settings={displaySettings}
+        auditLog={auditLog}
+        keepScreenAwakeSupported={screenWakeLock.isSupported}
+        keepScreenAwakeActive={screenWakeLock.isActive}
         onRequestClose={() => setOptionsOpen(false)}
         onPlayerChange={updatePlayerSettings}
         onLayoutChange={(layout: DisplayLayout) =>
@@ -177,6 +198,9 @@ function App() {
         }
         onOrientationChange={(orientation: PanelOrientation) =>
           setDisplaySettings((current) => ({ ...current, orientation }))
+        }
+        onKeepScreenAwakeChange={(keepScreenAwake) =>
+          setDisplaySettings((current) => ({ ...current, keepScreenAwake }))
         }
       />
 
@@ -207,7 +231,7 @@ function App() {
             className="dialog-button dialog-button--reset"
             type="button"
             onClick={() => {
-              setPlayers(createInitialMatch())
+              dispatch({ ...auditMetadata(), type: 'match-reset' })
               resetDialogRef.current?.close()
             }}
           >

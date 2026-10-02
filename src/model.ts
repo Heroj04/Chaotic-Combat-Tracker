@@ -18,6 +18,38 @@ export interface PlayerState {
 
 export type MatchState = [PlayerState, PlayerState]
 
+export interface AuditEntry {
+  id: string
+  timestamp: number
+  message: string
+}
+
+export interface TrackerState {
+  players: MatchState
+  auditLog: AuditEntry[]
+}
+
+interface AuditMetadata {
+  id: string
+  timestamp: number
+}
+
+export type TrackerAction =
+  | (AuditMetadata & {
+      type: 'stat-adjusted'
+      playerIndex: 0 | 1
+      playerName: string
+      stat: StatName
+      direction: -1 | 1
+    })
+  | (AuditMetadata & {
+      type: 'element-toggled'
+      playerIndex: 0 | 1
+      playerName: string
+      element: ElementName
+    })
+  | (AuditMetadata & { type: 'match-reset' })
+
 export const TRIBE_THEMES = [
   'Overworld',
   'Underworld',
@@ -42,6 +74,7 @@ export interface DisplaySettings {
   players: [PlayerDisplaySettings, PlayerDisplaySettings]
   layout: DisplayLayout
   orientation: PanelOrientation
+  keepScreenAwake: boolean
 }
 
 export function createDefaultDisplaySettings(): DisplaySettings {
@@ -52,6 +85,7 @@ export function createDefaultDisplaySettings(): DisplaySettings {
     ],
     layout: 'opposed',
     orientation: 'facing',
+    keepScreenAwake: true,
   }
 }
 
@@ -75,6 +109,73 @@ export function createInitialPlayer(): PlayerState {
 
 export function createInitialMatch(): MatchState {
   return [createInitialPlayer(), createInitialPlayer()]
+}
+
+export function createInitialTrackerState(): TrackerState {
+  return {
+    players: createInitialMatch(),
+    auditLog: [],
+  }
+}
+
+function appendAuditEntry(
+  state: TrackerState,
+  players: MatchState,
+  action: AuditMetadata,
+  message: string,
+): TrackerState {
+  return {
+    players,
+    auditLog: [
+      ...state.auditLog,
+      { id: action.id, timestamp: action.timestamp, message },
+    ].slice(-100),
+  }
+}
+
+export function trackerReducer(
+  state: TrackerState,
+  action: TrackerAction,
+): TrackerState {
+  if (action.type === 'match-reset') {
+    return appendAuditEntry(
+      state,
+      createInitialMatch(),
+      action,
+      'Match reset: both players returned to 50 and all elements were turned off',
+    )
+  }
+
+  const currentPlayer = state.players[action.playerIndex]
+
+  if (action.type === 'stat-adjusted') {
+    const nextPlayer = adjustStat(currentPlayer, action.stat, action.direction)
+    const previousValue = currentPlayer.stats[action.stat]
+    const nextValue = nextPlayer.stats[action.stat]
+
+    if (previousValue === nextValue) return state
+
+    const nextPlayers: MatchState = [...state.players]
+    nextPlayers[action.playerIndex] = nextPlayer
+
+    return appendAuditEntry(
+      state,
+      nextPlayers,
+      action,
+      `${action.playerName}: ${action.stat} ${previousValue} -> ${nextValue}`,
+    )
+  }
+
+  const wasActive = currentPlayer.elements[action.element]
+  const nextPlayers: MatchState = [...state.players]
+  nextPlayers[action.playerIndex] = toggleElement(currentPlayer, action.element)
+
+  return appendAuditEntry(
+    state,
+    nextPlayers,
+    action,
+    `${action.playerName}: ${action.element} turned ${wasActive ? 'off' : 'on'}`,
+  )
 }
 
 export function adjustStat(

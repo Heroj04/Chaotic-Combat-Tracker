@@ -11,8 +11,9 @@ Generative AI coding tools assisted with development of this project. The result
 - Energy, Courage, Power, Wisdom, and Speed start at 50. Use the plus and minus controls to change a stat by 5; there are no limits.
 - Fire, Air, Earth, and Water can be toggled independently for each player.
 - The center reset button asks for confirmation, then returns both players' stats to 50 and turns off every element.
-- Open tracker options to set each player's name and tribe theme, place the players opposite or next to each other, and choose facing or same-way-up orientation.
-- Names, themes, placement, and orientation are saved on the device. Match stats and element toggles return to defaults when the page is reloaded.
+- Open tracker options to set each player's name and tribe theme, choose player placement and orientation, keep the screen awake, and review the current session's activity log.
+- Names, themes, placement, orientation, and the keep-awake preference are saved on the device. Match stats, elements, and the activity log reset when the page is reloaded.
+- Keep-awake uses the Screen Wake Lock API and requires HTTPS plus browser support.
 
 ## Run locally
 

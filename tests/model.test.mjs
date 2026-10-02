@@ -4,8 +4,10 @@ import {
   adjustStat,
   createDefaultDisplaySettings,
   createInitialMatch,
+  createInitialTrackerState,
   ELEMENT_ORDER,
   STAT_ORDER,
+  trackerReducer,
   toggleElement,
 } from '../src/model.ts'
 
@@ -17,7 +19,70 @@ test('display preferences default to facing opponents with independent tribe the
     ],
     layout: 'opposed',
     orientation: 'facing',
+    keepScreenAwake: true,
   })
+})
+
+test('tracker records stat, element, and reset events in a session audit log', () => {
+  let state = createInitialTrackerState()
+
+  state = trackerReducer(state, {
+    id: '1',
+    timestamp: 1000,
+    type: 'stat-adjusted',
+    playerIndex: 0,
+    playerName: 'Alya',
+    stat: 'Energy',
+    direction: 1,
+  })
+  state = trackerReducer(state, {
+    id: '2',
+    timestamp: 2000,
+    type: 'element-toggled',
+    playerIndex: 1,
+    playerName: 'Bram',
+    element: 'Fire',
+  })
+
+  assert.equal(state.players[0].stats.Energy, 55)
+  assert.equal(state.players[1].elements.Fire, true)
+  assert.deepEqual(
+    state.auditLog.map((entry) => entry.message),
+    ['Alya: Energy 50 -> 55', 'Bram: Fire turned on'],
+  )
+
+  state = trackerReducer(state, {
+    id: '3',
+    timestamp: 3000,
+    type: 'match-reset',
+  })
+
+  assert.deepEqual(state.players, createInitialMatch())
+  assert.match(state.auditLog.at(-1).message, /Match reset/)
+})
+
+test('tracker does not log a stat decrement that cannot change zero', () => {
+  const state = createInitialTrackerState()
+  const atZero = {
+    ...state,
+    players: [
+      { ...state.players[0], stats: { ...state.players[0].stats, Energy: 0 } },
+      state.players[1],
+    ],
+  }
+
+  assert.strictEqual(
+    trackerReducer(atZero, {
+      id: 'noop',
+      timestamp: 1000,
+      type: 'stat-adjusted',
+      playerIndex: 0,
+      playerName: 'Player 1',
+      stat: 'Energy',
+      direction: -1,
+    }),
+    atZero,
+  )
 })
 
 test('both players start with every stat at 50 and every element inactive', () => {
