@@ -1,0 +1,6 @@
+services:
+  chaotic-combat-tracker:
+    image: ${TRACKER_IMAGE:-ghcr.io/your-github-user/chaoticcombattracker:latest}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

@@ -47,3 +47,13 @@ docker run --rm -p 8080:8080 chaotic-combat-tracker
 ```
 
 Put the container behind an HTTPS reverse proxy when exposing it publicly; service-worker installation requires a secure origin.
+
+An example Compose file runs the published image. Set `TRACKER_IMAGE` to your GHCR package (for example, `ghcr.io/owner/repository:latest`) in the environment or a `.env` file next to the Compose file, then start it with:
+
+```sh
+docker compose -f docker-compose.example.yml up -d
+```
+
+### GitHub Actions
+
+The `Verify and publish container` workflow runs tests, lint, and the PWA build on pull requests. Push a version tag such as `v1.2.3` (`git tag v1.2.3`, then `git push origin v1.2.3`) to run the same checks and publish the container to GHCR with `1.2.3`, `1.2`, `1`, and `latest` tags. Enable GitHub Actions package write access for the repository if it is not already enabled.

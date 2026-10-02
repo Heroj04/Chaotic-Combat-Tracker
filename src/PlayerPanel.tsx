@@ -1,13 +1,13 @@
 import {
-  Brain,
+  BatteryCharging,
   Droplets,
-  Dumbbell,
+  Eye,
   Flame,
-  Gauge,
+  Heart,
   Minus,
+  MoveUpRight,
   Mountain,
   Plus,
-  Shield,
   Wind,
   Zap,
 } from 'lucide-react'
@@ -21,11 +21,11 @@ import {
 } from './model'
 
 const statIcons = {
-  Energy: Zap,
-  Courage: Shield,
-  Power: Dumbbell,
-  Wisdom: Brain,
-  Speed: Gauge,
+  Energy: BatteryCharging,
+  Courage: Heart,
+  Power: Zap,
+  Wisdom: Eye,
+  Speed: MoveUpRight,
 }
 
 const elementIcons = {
