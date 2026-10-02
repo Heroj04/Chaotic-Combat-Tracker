@@ -9,11 +9,15 @@ import {
   type DisplaySettings,
   type PanelOrientation,
   type PlayerDisplaySettings,
+  type AuditEntry,
 } from './model'
 
 interface OptionsDialogProps {
   open: boolean
   settings: DisplaySettings
+  auditLog: AuditEntry[]
+  keepScreenAwakeSupported: boolean
+  keepScreenAwakeActive: boolean
   onRequestClose: () => void
   onPlayerChange: (
     playerIndex: 0 | 1,
@@ -21,15 +25,20 @@ interface OptionsDialogProps {
   ) => void
   onLayoutChange: (layout: DisplayLayout) => void
   onOrientationChange: (orientation: PanelOrientation) => void
+  onKeepScreenAwakeChange: (enabled: boolean) => void
 }
 
 export function OptionsDialog({
   open,
   settings,
+  auditLog,
+  keepScreenAwakeSupported,
+  keepScreenAwakeActive,
   onRequestClose,
   onPlayerChange,
   onLayoutChange,
   onOrientationChange,
+  onKeepScreenAwakeChange,
 }: OptionsDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
@@ -154,6 +163,53 @@ export function OptionsDialog({
             ))}
           </div>
         </fieldset>
+
+        <fieldset className="choice-setting keep-awake-setting">
+          <legend>Keep screen awake</legend>
+          <label className="keep-awake-toggle">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={settings.keepScreenAwake}
+              disabled={!keepScreenAwakeSupported && !settings.keepScreenAwake}
+              onChange={(event) => onKeepScreenAwakeChange(event.target.checked)}
+            />
+            <span>Prevent the screen from sleeping during a match</span>
+          </label>
+          <p className="keep-awake-status" aria-live="polite">
+            {!keepScreenAwakeSupported
+              ? 'Screen Wake Lock requires HTTPS and browser support.'
+              : keepScreenAwakeActive
+                ? 'The screen will stay awake while this app is visible.'
+                : 'The screen may sleep while the app is in the background.'}
+          </p>
+        </fieldset>
+
+        <section className="audit-log" aria-labelledby="audit-log-title">
+          <header className="audit-log__header">
+            <h3 id="audit-log-title">Activity log</h3>
+            <span>{auditLog.length} / 100</span>
+          </header>
+          {auditLog.length === 0 ? (
+            <p className="audit-log__empty">Match changes will appear here.</p>
+          ) : (
+            <ol className="audit-log__entries">
+              {[...auditLog].reverse().map((entry) => (
+                <li key={entry.id}>
+                  <time dateTime={new Date(entry.timestamp).toISOString()}>
+                    {new Date(entry.timestamp).toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      second: '2-digit',
+                    })}
+                  </time>
+                  <span>{entry.message}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+          <p className="audit-log__note">This log is kept only for the current session.</p>
+        </section>
 
         <section className="install-setting" aria-labelledby="install-setting-title">
           <h3 id="install-setting-title">Install app</h3>
