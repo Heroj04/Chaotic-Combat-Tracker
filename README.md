@@ -33,7 +33,9 @@ npm run build
 
 ## Install the PWA
 
-Deploy the app over HTTPS for service-worker and install support. On Android or desktop Chromium browsers, use the browser's install option. On iPhone or iPad, open the site in Safari and choose **Share > Add to Home Screen**. The app shell and bundled assets are cached after the first visit for offline use.
+The app's **Install** button opens the browser's native install prompt when available, or shows device-specific steps. Deploy the app over HTTPS: mobile browsers do not allow service workers or PWA installation from a plain HTTP LAN address such as `http://192.168.x.x`. `localhost` is considered secure only when opened on the same device.
+
+On Android, open the HTTPS site in Chrome and use the in-app prompt or Chrome's **Install app** menu action. On iPhone or iPad, open the HTTPS site in Safari, tap **Share > Add to Home Screen**, then tap **Add**. After installation, the app shell and bundled assets are cached for offline launch.
 
 ## Host the app
 

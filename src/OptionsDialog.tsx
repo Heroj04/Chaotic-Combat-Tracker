@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Settings2, X } from 'lucide-react'
+import { InstallAction } from './InstallAction'
 import {
   DISPLAY_LAYOUTS,
   PANEL_ORIENTATIONS,
@@ -153,6 +154,11 @@ export function OptionsDialog({
             ))}
           </div>
         </fieldset>
+
+        <section className="install-setting" aria-labelledby="install-setting-title">
+          <h3 id="install-setting-title">Install app</h3>
+          <InstallAction />
+        </section>
       </div>
     </dialog>
   )
