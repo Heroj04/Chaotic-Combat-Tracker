@@ -2,6 +2,10 @@
 
 A two-player, face-to-face stat tracker for Chaotic TCG. One player's panel is rotated so both players can read the shared screen from opposite sides.
 
+## AI usage disclosure
+
+Generative AI coding tools assisted with development of this project. The resulting changes were reviewed and tested, but may still contain errors. The app does not use AI services at runtime.
+
 ## Track a match
 
 - Energy, Courage, Power, Wisdom, and Speed start at 50. Use the plus and minus controls to change a stat by 5; there are no limits.
@@ -56,4 +60,4 @@ docker compose -f docker-compose.example.yml up -d
 
 ### GitHub Actions
 
-The `Verify and publish container` workflow runs tests, lint, and the PWA build on pull requests. Push a version tag such as `v1.2.3` (`git tag v1.2.3`, then `git push origin v1.2.3`) to run the same checks and publish the container to GHCR with `1.2.3`, `1.2`, `1`, and `latest` tags. Enable GitHub Actions package write access for the repository if it is not already enabled.
+The `Verify and publish container` workflow runs unit tests and the PWA build as separate jobs on pull requests. Push a version tag such as `v1.2.3` (`git tag v1.2.3`, then `git push origin v1.2.3`) to run both checks and publish the container to GHCR with `1.2.3`, `1.2`, `1`, and `latest` tags. You can also run the workflow manually from **Actions > Verify and publish container > Run workflow**, entering an existing semantic version tag such as `v1.2.3`. Enable GitHub Actions package write access for the repository if it is not already enabled.
