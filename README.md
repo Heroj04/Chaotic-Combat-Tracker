@@ -5,6 +5,7 @@ A two-player, face-to-face stat tracker for Chaotic TCG. One player's panel is r
 ## AI usage disclosure
 
 Generative AI coding tools assisted with development of this project. The resulting changes were reviewed and tested, but may still contain errors. The app does not use AI services at runtime.
+I utilized Github Copilot via VSCode and the resulting is pretty sloppy, but it has been good enough for a personal project I wanted working in an hour.
 
 ## Track a match
 
